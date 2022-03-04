@@ -42,6 +42,11 @@ type Return = {
   ];
 };
 
+/**
+ * Extracts the menu from the given PDF file.
+ * @param pdf_data Data buffer of the pdf file
+ * @returns Structured menu
+ */
 export async function extract_pdf(pdf_data: Uint8Array): Promise<WeekMenu> {
   const res = await library.symbols.extract_pdf(pdf_data, pdf_data.byteLength);
   const data = readPointer(res);
