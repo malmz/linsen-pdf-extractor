@@ -1,74 +1,32 @@
-import { CachePolicy, prepare } from "https://deno.land/x/plug@0.5.1/plug.ts";
+import { extract_pdf as wasm_extract_pdf } from "./pkg/linsen_pdf_extractor.js";
 
-function readPointer(v: Deno.UnsafePointer): Uint8Array {
-  const ptr = new Deno.UnsafePointerView(v);
-  const lengthBe = new Uint8Array(4);
-  const view = new DataView(lengthBe.buffer);
-  ptr.copyInto(lengthBe, 0);
-  const buf = new Uint8Array(view.getUint32(0));
-  ptr.copyInto(buf, 4);
-  return buf;
+export interface Dishes {
+  swedish: string[];
+  english: string[];
 }
 
-const opts = {
-  name: "linsen_pdf_extractor",
-  url: new URL("./target/debug", import.meta.url).toString(),
-  policy: CachePolicy.NONE,
-};
-
-/* const library = await prepare(opts, {
-  extract_pdf: {
-    parameters: ["pointer", "usize"],
-    result: "pointer",
-    nonblocking: true,
-  },
-}); */
-
-const library = Deno.dlopen("./target/debug/liblinsen_pdf_extractor.dylib", {
-  extract_pdf: {
-    parameters: ["pointer", "usize"],
-    result: "pointer",
-    nonblocking: true,
-  },
-});
-
-export type Menu = {
+export interface Menu {
   date: Date;
-  dishes: string[];
-};
+  dishes: Dishes;
+}
 
-export type WeekMenu = {
+export interface WeekMenu {
   days: Menu[];
-};
+}
 
-type Return = {
-  days: [
-    {
-      date: string;
-      dishes: string[];
-    }
-  ];
-};
-
-/**
- * Extracts the menu from the given PDF file.
- * @param pdf_data Data buffer of the pdf file
- * @returns Structured menu
- */
-export async function extract_pdf(pdf_data: Uint8Array): Promise<WeekMenu> {
-  const res = await library.symbols.extract_pdf(pdf_data, pdf_data.byteLength);
-  const data = readPointer(res);
-  const text = new TextDecoder().decode(data);
-  const json = JSON.parse(text) as Return;
-
-  const menu: WeekMenu = {
-    days: json.days.map((menu) => {
-      return {
-        date: new Date(menu.date),
-        dishes: menu.dishes,
-      };
-    }),
+export function extract_pdf(pdf_bytes: Uint8Array): WeekMenu {
+  const data = wasm_extract_pdf(pdf_bytes) as {
+    days: { date: string; dishes: Dishes }[];
   };
 
-  return menu;
+  const newDays = data.days.map((day) => {
+    return {
+      date: new Date(day.date),
+      dishes: day.dishes,
+    } as Menu;
+  });
+
+  return {
+    days: newDays,
+  } as WeekMenu;
 }

@@ -2,4 +2,11 @@
 
 Reads the pdf menu from chalmers linsen resturant and outputs it in a nice structured format. 
 
-Can be used from deno.
+## Usage
+
+```ts
+import { extract_pdf } from "https://deno.land/x/linsen-pdf-extractor/mod.ts";
+
+const data = await Deno.readFile("./assets/meny.pdf");
+const menu = extract_pdf(data);
+```

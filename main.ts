@@ -1,5 +1,6 @@
 import { extract_pdf } from "./mod.ts";
 
-const data = await Deno.readFile("./linsen-pdf-extractor/assets/meny.pdf");
-const menu = await extract_pdf(data);
-console.log(menu);
+const data = await Deno.readFile("./assets/meny.pdf");
+console.time("extract_pdf");
+const menu = extract_pdf(data);
+console.timeEnd("extract_pdf");

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, TimeZone, Utc, Weekday};
+use chrono::{Datelike, TimeZone, Utc, Weekday};
 use nom::{
     bytes::complete::tag,
     character::complete::{digit1, newline, not_line_ending, space0, space1},
@@ -7,7 +7,8 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, terminated, tuple},
     IResult,
 };
-use serde::Serialize;
+
+use crate::{Menu, WeekMenu};
 
 fn line_end(input: &str) -> IResult<&str, ()> {
     map(tuple((space0, newline)), |_| ())(input)
@@ -55,23 +56,6 @@ fn weekday(weekday: &str) -> Weekday {
         "Fredag" => Weekday::Fri,
         _ => Weekday::Mon,
     }
-}
-
-#[derive(Default, Serialize)]
-pub struct Dishes {
-    pub swedish: Vec<String>,
-    pub english: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct Menu {
-    pub date: DateTime<Utc>,
-    pub dishes: Vec<String>,
-}
-
-#[derive(Debug, Clone, Default, Serialize)]
-pub struct WeekMenu {
-    pub days: Vec<Menu>,
 }
 
 pub fn parse(input: &str) -> IResult<&str, WeekMenu> {
