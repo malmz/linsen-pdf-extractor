@@ -11,12 +11,20 @@ function readPointer(v: Deno.UnsafePointer): Uint8Array {
 }
 
 const opts = {
-  name: "linsen-pdf-extractor",
+  name: "linsen_pdf_extractor",
   url: new URL("./target/debug", import.meta.url).toString(),
   policy: CachePolicy.NONE,
 };
 
-const library = await prepare(opts, {
+/* const library = await prepare(opts, {
+  extract_pdf: {
+    parameters: ["pointer", "usize"],
+    result: "pointer",
+    nonblocking: true,
+  },
+}); */
+
+const library = Deno.dlopen("./target/debug/liblinsen_pdf_extractor.dylib", {
   extract_pdf: {
     parameters: ["pointer", "usize"],
     result: "pointer",

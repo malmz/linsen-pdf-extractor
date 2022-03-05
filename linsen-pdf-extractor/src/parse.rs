@@ -7,6 +7,7 @@ use nom::{
     sequence::{delimited, preceded, separated_pair, terminated, tuple},
     IResult,
 };
+use serde::Serialize;
 
 fn line_end(input: &str) -> IResult<&str, ()> {
     map(tuple((space0, newline)), |_| ())(input)
@@ -56,13 +57,19 @@ fn weekday(weekday: &str) -> Weekday {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Serialize)]
+pub struct Dishes {
+    pub swedish: Vec<String>,
+    pub english: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct Menu {
     pub date: DateTime<Utc>,
     pub dishes: Vec<String>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct WeekMenu {
     pub days: Vec<Menu>,
 }

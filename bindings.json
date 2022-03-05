@@ -1,0 +1,1 @@
+{"name":"","littleEndian":false,"symbols":{"testing":{"parameters":[],"result":{"structenum":{"ident":"Boi"}},"nonBlocking":false}},"typeDefs":{"Boi":{"data":"String"}},"tsTypes":{"Boi":"export type Boi = {\n    data: string;\n};"}}
