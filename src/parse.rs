@@ -3,12 +3,12 @@ use nom::{
     bytes::complete::tag,
     character::complete::{digit1, newline, not_line_ending, space0, space1},
     combinator::{map, map_res},
-    multi::{many0, separated_list1},
-    sequence::{delimited, preceded, separated_pair, terminated, tuple},
+    multi::{fold_many1, many0, separated_list1},
+    sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
     IResult,
 };
 
-use crate::{Menu, WeekMenu};
+use crate::{Dishes, Menu, WeekMenu};
 
 fn line_end(input: &str) -> IResult<&str, ()> {
     map(tuple((space0, newline)), |_| ())(input)
@@ -29,20 +29,33 @@ fn parse_day(input: &str) -> IResult<&str, &str> {
     ))(input)
 }
 
-fn parse_dishes(input: &str) -> IResult<&str, Vec<&str>> {
-    let dish_parse = preceded(space1, not_line_ending);
-    let parse_lines = separated_list1(line_end, dish_parse);
-    let parse_first = not_line_ending;
-    let (input, (first, mut rest)) =
-        terminated(separated_pair(parse_first, line_end, parse_lines), newline)(input)?;
-
-    rest.insert(0, first);
-    Ok((input, rest))
+fn parse_dish_line(input: &str) -> IResult<&str, &str> {
+    delimited(space1, not_line_ending, line_end)(input)
 }
 
-fn parse_menu(input: &str) -> IResult<&str, (&str, Vec<&str>)> {
-    let (input, day) = parse_day(input)?;
-    let (input, _) = tag(": ")(input)?;
+fn parse_first_dish(input: &str) -> IResult<&str, (&str, &str)> {
+    let (input, swedish) = terminated(not_line_ending, newline)(input)?;
+    let (input, english) = parse_dish_line(input)?;
+    Ok((input, (swedish, english)))
+}
+
+fn parse_dishes(input: &str) -> IResult<&str, Vec<(&str, &str)>> {
+    let (input, first_dish) = parse_first_dish(input)?;
+    let dishes = vec![first_dish];
+    let (input, dishes) = fold_many1(
+        pair(parse_dish_line, parse_dish_line),
+        || dishes.clone(),
+        |mut acc, val| {
+            acc.push(val);
+            acc
+        },
+    )(input)?;
+
+    Ok((input, dishes))
+}
+
+fn parse_menu(input: &str) -> IResult<&str, (&str, Vec<(&str, &str)>)> {
+    let (input, day) = terminated(parse_day, tag(": "))(input)?;
     let (input, dishes) = parse_dishes(input)?;
     Ok((input, (day, dishes)))
 }
@@ -65,7 +78,14 @@ pub fn parse(input: &str) -> IResult<&str, WeekMenu> {
 
     let parse_menu = map(parse_menu, |(day, dishes)| Menu {
         date: Utc.isoywd(year, week, weekday(day)).and_hms(0, 0, 0),
-        dishes: dishes.into_iter().map(|d| d.to_string()).collect(),
+        dishes: dishes
+            .into_iter()
+            .map(|(s, e)| (s.to_owned(), e.to_owned()))
+            .fold(Dishes::default(), |mut acc, (s, e)| {
+                acc.swedish.push(s);
+                acc.english.push(e);
+                acc
+            }),
     });
 
     let (input, menu) = many0(parse_menu)(input)?;

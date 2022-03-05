@@ -14,7 +14,7 @@ pub use pdf::extract;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct Dishes {
     pub swedish: Vec<String>,
     pub english: Vec<String>,
@@ -23,7 +23,7 @@ pub struct Dishes {
 #[derive(Debug, Clone, Serialize)]
 pub struct Menu {
     pub date: DateTime<Utc>,
-    pub dishes: Vec<String>,
+    pub dishes: Dishes,
 }
 
 #[derive(Debug, Clone, Default, Serialize)]
