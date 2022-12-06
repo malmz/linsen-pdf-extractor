@@ -1,3 +1,5 @@
+# Linsen removed the pdf menu so this is now useless
+
 # Linsen pdf extractor
 
 Reads the pdf menu from chalmers linsen resturant and outputs it in a nice structured format. 
